@@ -1,0 +1,28 @@
+{
+  "name": "gp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --require ts-node/register test/*_spec.ts",
+    "build": "npm install tsc -p"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/chai": "^4.3.5",
+    "@types/lodash.clonedeep": "^4.5.7",
+    "@types/mocha": "^10.0.1",
+    "@types/sinon": "^10.0.16",
+    "chai": "^4.3.8",
+    "mocha": "^10.2.0",
+    "sinon": "^15.2.0",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "lodash.clonedeep": "^4.5.0",
+    "ts-node": "^10.9.1",
+    "tsc": "^2.0.4"
+  }
+}
