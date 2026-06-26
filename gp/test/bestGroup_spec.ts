@@ -85,7 +85,35 @@ describe("Test best card formation", function () {
     });
 
     describe("Cases to be added " , () =>{
-
+        const additionalCases : Array<any> = [
+            {
+                cards: ['3.s','2.c','7.d','Q.d','A.s','7.s','J.d','5.h','9.d','3.c','4.d','5.d','2.d'],
+                joker: '8.s',
+                formationResult: {
+                    isValid: false,
+                    score: 80,
+                    names: undefined,
+                    groupIdToTypeMap: new Map()
+                },
+                description: "no joker in hand, no valid groups possible — names is undefined (bug)"
+            },
+            {
+                cards: ['6.s','J.c','2.h','Q.d','5.h','2.s','K.s','9.d','4.c','A.s','9.h','10.h','J.h'],
+                joker: 'K.c',
+                formationResult: {
+                    isValid: false,
+                    score: 80,
+                    names: undefined,
+                    groupIdToTypeMap: new Map()
+                },
+                description: "pure seq (9h-10h-Jh) exists but bestGrouping returns undefined names"
+            }
+        ];
+        additionalCases.forEach( (deck, i) =>{
+            it(`additional test ${i} - ${deck.description}`, function () {
+                assert.deepEqual(cardManager.bestGrouping( deck.cards, deck.joker ), deck.formationResult);
+            });
+        })
     });
 });
 

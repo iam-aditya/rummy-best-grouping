@@ -9,19 +9,148 @@
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 18px 28px;
-  background: rgba(0, 0, 0, 0.35);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  position: sticky;
-  top: 0;
-  z-index: 50;
+  padding: 24px 28px 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
 }
 
 .joker-area {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
+}
+
+/* ── Deck ── */
+.deck-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.deck-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.deck-pile {
+  position: relative;
+  width: 72px;
+  height: 108px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.deck-pile::before,
+.deck-pile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
+  background: #1e3560;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.deck-pile::before { transform: translate(-5px, -5px); }
+.deck-pile::after  { transform: translate(-2px, -2px); }
+
+.deck-card-face {
+  position: relative;
+  z-index: 1;
+  width: 72px;
+  height: 108px;
+  border-radius: 9px;
+  background: #1e3a5f;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.deck-count {
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: Georgia, serif;
+}
+
+.deck-cards-left {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.4px;
+}
+
+.deck-pile:hover:not(:disabled) .deck-card-face {
+  background: #264d80;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.deck-pile:disabled { cursor: default; }
+.deck-pile:disabled .deck-card-face { opacity: 0.5; }
+
+.deck-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  font-style: italic;
+}
+
+/* ── Discard mode ── */
+.discard-banner {
+  margin: 0 28px 0;
+  padding: 10px 20px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fca5a5;
+}
+
+.card.discard-mode {
+  cursor: default;
+}
+
+.discard-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
+  background: rgba(239, 68, 68, 0.18);
+  border: 2px solid rgba(239, 68, 68, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 3px 5px;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.12s;
+}
+
+.discard-overlay:hover {
+  background: rgba(239, 68, 68, 0.4);
+}
+
+.discard-x {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ef4444;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .joker-label {
@@ -38,34 +167,38 @@
 }
 
 .joker-card-display {
-  width: 46px;
-  height: 64px;
+  width: 72px;
+  height: 108px;
   background: #fffdf0;
-  border-radius: 6px;
+  border-radius: 9px;
   border: 2px solid #facc15;
-  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.25), 0 3px 10px rgba(0,0,0,0.5);
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.3), 1px 3px 10px rgba(0,0,0,0.5);
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: space-between;
-  padding: 4px 5px;
+  padding: 5px 6px;
   cursor: default;
+  position: relative;
+  font-family: Georgia, serif;
 }
 
 .joker-card-display.red { color: #cc1111; }
-.joker-card-display.black { color: #111; }
+.joker-card-display.black { color: #1a1a1a; }
 
-.joker-card-corner {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-  font-size: 12px;
-  font-weight: 700;
-  align-self: flex-start;
-}
-
-.joker-card-sym {
-  font-size: 18px;
+.joker-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #92400e;
+  background: #fde047;
+  border-radius: 3px;
+  padding: 2px 5px;
+  font-family: system-ui, sans-serif;
+  white-space: nowrap;
 }
 
 /* ── Cards ── */
@@ -213,10 +346,11 @@
   color: rgba(255, 255, 255, 0.4);
   cursor: pointer;
   font-size: 13px;
-  padding: 0 20px;
-  height: 150px;
-  min-width: 90px;
+  padding: 12px 20px;
+  height: 174px;
+  min-width: 110px;
   transition: all 0.15s;
+  align-self: flex-start;
 }
 
 .btn-add-group:hover {
@@ -228,6 +362,12 @@
 .add-icon {
   font-size: 24px;
   line-height: 1;
+}
+
+.submit-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 28px 24px;
 }
 
 /* ── Submit button ── */
@@ -246,6 +386,44 @@
 
 .btn-submit:hover:not(:disabled) { background: #15803d; }
 .btn-submit:disabled { background: rgba(255,255,255,0.12); cursor: not-allowed; }
+
+/* ── Example cards in rules ── */
+.ex-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 68px;
+  background: #fffdf0;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.3);
+  font-family: Georgia, serif;
+  line-height: 1;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.ex-card.red  { color: #cc1111; }
+.ex-card.black { color: #1a1a1a; }
+
+.ex-rank { font-size: 13px; font-weight: 700; }
+.ex-suit { font-size: 20px; }
+
+.ex-joker {
+  background: #fef9c3;
+  border-color: #fde047;
+  box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.25), 0 0 0 1.5px rgba(250, 204, 21, 0.35);
+  color: #92400e;
+  font-family: system-ui, sans-serif;
+}
+
+.ex-cards-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
 
 /* ── Rules ── */
 .rules-panel {
@@ -291,6 +469,121 @@
   font-size: 13px;
   color: rgba(255, 255, 255, 0.35);
   font-style: italic;
+}
+
+.rules-joker-section {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.rules-joker-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 12px;
+}
+
+.rules-joker-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.rules-joker-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.rules-joker-list li {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  padding-left: 16px;
+  position: relative;
+  line-height: 1.5;
+}
+
+.rules-joker-list li::before {
+  content: '·';
+  position: absolute;
+  left: 4px;
+  color: #fde047;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+/* ── Draw & discard rules ── */
+.rules-draw-section {
+  margin: 20px 0 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.rules-draw-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 8px;
+}
+
+.rules-draw-body {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Scoring rules section ── */
+.rules-scoring-section {
+  margin: 20px 0 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.rules-scoring-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 12px;
+}
+
+.rules-scoring-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rules-scoring-list li {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.55;
+  padding-left: 0;
+}
+
+.rules-scoring-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fde047;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* ── Result section ── */
@@ -436,6 +729,32 @@
   font-size: 13px;
   color: rgba(255, 255, 255, 0.4);
   font-style: italic;
+}
+
+.group-pts {
+  font-size: 13px;
+  font-weight: 700;
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.pts-zero    { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+.pts-nonzero { color: #f87171; background: rgba(248, 113, 113, 0.1); }
+
+.result-pts-sum {
+  font-size: 13px;
+  color: #f87171;
+  font-weight: 600;
+}
+
+.rules-goal {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.6;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 /* ── Play again ── */

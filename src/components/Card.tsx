@@ -6,9 +6,11 @@ interface CardProps {
   cardStr: string;
   groupId: number;
   index: number;
+  discardMode?: boolean;
+  onDiscard?: () => void;
 }
 
-export function Card({ cardStr, groupId, index }: CardProps) {
+export function Card({ cardStr, groupId, index, discardMode, onDiscard }: CardProps) {
   const { rank, suit } = parseCard(cardStr);
   const sym = suitSymbol(suit);
   const red = isRed(cardStr);
@@ -31,7 +33,7 @@ export function Card({ cardStr, groupId, index }: CardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`card ${red ? 'red' : 'black'}`}
+      className={`card ${red ? 'red' : 'black'}${discardMode ? ' discard-mode' : ''}`}
       {...listeners}
       {...attributes}
     >
@@ -44,6 +46,11 @@ export function Card({ cardStr, groupId, index }: CardProps) {
         <span className="rank">{rank}</span>
         <span className="suit-sm">{sym}</span>
       </div>
+      {discardMode && (
+        <div className="discard-overlay" onClick={e => { e.stopPropagation(); onDiscard?.(); }}>
+          <span className="discard-x">×</span>
+        </div>
+      )}
     </div>
   );
 }

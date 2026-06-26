@@ -4,7 +4,7 @@ function serializeResult(result) {
   return {
     isValid: result.isValid,
     score: result.score,
-    names: result.names,
+    names: result.names ?? [],
     groupIdToTypeMap: result.groupIdToTypeMap
       ? Object.fromEntries(result.groupIdToTypeMap)
       : {},

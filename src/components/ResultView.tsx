@@ -1,5 +1,28 @@
 import { parseCard, suitSymbol, isRed } from '../utils/cardFormat';
 
+function cardPoints(rank: string, jokerRank: string): number {
+  if (!rank || rank === jokerRank) return 0;
+  if (rank === 'A' || rank === 'J' || rank === 'Q' || rank === 'K') return 10;
+  const n = parseInt(rank, 10);
+  return isNaN(n) ? 10 : n;
+}
+
+function groupPoints(g: ParsedGroup, jokerRank: string): number {
+  if (g.type === 'seq' || g.type === 'impSeq' || g.type === 'set') return 0;
+  return g.cards.reduce((sum, c) => {
+    if (c.usedAsJoker) return sum;
+    const { rank } = parseCard(c.display);
+    return sum + cardPoints(rank, jokerRank);
+  }, 0);
+}
+
+function ungroupedPoints(cards: string[], jokerRank: string): number {
+  return cards.reduce((sum, c) => {
+    const { rank } = parseCard(c);
+    return sum + cardPoints(rank, jokerRank);
+  }, 0);
+}
+
 interface FormationResult {
   isValid: boolean;
   score: number;
@@ -10,6 +33,7 @@ interface FormationResult {
 interface ResultViewProps {
   userResult: FormationResult;
   bestResult: FormationResult;
+  joker: string;
   onPlayAgain: () => void;
 }
 
@@ -46,7 +70,7 @@ function parseNames(
   const groups: Record<string, ParsedGroup> = {};
   const ungrouped: string[] = [];
 
-  for (const name of names) {
+  for (const name of (names ?? [])) {
     const parts = name.split('.');
     const rank = parts[0];
     const suit = parts[1];
@@ -55,7 +79,7 @@ function parseNames(
 
     const display = `${rank}.${suit}`;
 
-    if (groupId) {
+    if (groupId && groupId !== '0') {
       if (!groups[groupId]) {
         groups[groupId] = { type: typeMap[groupId] ?? 'inv', cards: [] };
       }
@@ -82,35 +106,48 @@ function ResultCard({ cardStr, isJoker }: { cardStr: string; isJoker: boolean })
 
 function GroupList({
   parsed,
+  showPoints,
+  jokerRank,
   label,
 }: {
   parsed: { groups: Record<string, ParsedGroup>; ungrouped: string[] };
+  showPoints: boolean;
+  jokerRank: string;
   label: string;
 }) {
   return (
     <div className="result-group-list">
-      {Object.entries(parsed.groups).map(([id, g], i) => (
-        <div key={id} className="result-group">
-          <div className="result-group-meta">
-            <span className="result-group-num">{label} {i + 1}</span>
-            <span className={`result-group-type ${TYPE_CLASS[g.type] ?? ''}`}>
-              {TYPE_LABEL[g.type] ?? g.type}
-            </span>
+      {Object.entries(parsed.groups).map(([id, g], i) => {
+        const pts = groupPoints(g, jokerRank);
+        const valid = g.type !== 'inv';
+        return (
+          <div key={id} className="result-group">
+            <div className="result-group-meta">
+              <span className="result-group-num">{label} {i + 1}</span>
+              <span className={`result-group-type ${TYPE_CLASS[g.type] ?? ''}`}>
+                {TYPE_LABEL[g.type] ?? g.type}
+              </span>
+            </div>
+            <div className="result-cards-row">
+              {g.cards.map((c, j) => (
+                <ResultCard key={j} cardStr={c.display} isJoker={c.usedAsJoker} />
+              ))}
+            </div>
+            {showPoints && !valid && pts > 0 && (
+              <p className="result-pts-sum">{pts} pts</p>
+            )}
+            <p className="result-group-desc">
+              {valid ? TYPE_DESC[g.type] : TYPE_DESC['inv']}
+            </p>
           </div>
-          <div className="result-cards-row">
-            {g.cards.map((c, j) => (
-              <ResultCard key={j} cardStr={c.display} isJoker={c.usedAsJoker} />
-            ))}
-          </div>
-          <p className="result-group-desc">{TYPE_DESC[g.type]}</p>
-        </div>
-      ))}
+        );
+      })}
       {parsed.ungrouped.length > 0 && (
         <div className="result-group">
           <div className="result-group-meta">
-            <span className="result-group-num">Ungrouped</span>
+            <span className="result-group-num">Ungrouped cards</span>
             <span className={`result-group-type ${TYPE_CLASS['inv']}`}>
-              Not part of any group ✗
+              Not in any group ✗
             </span>
           </div>
           <div className="result-cards-row">
@@ -118,6 +155,9 @@ function GroupList({
               <ResultCard key={j} cardStr={c} isJoker={false} />
             ))}
           </div>
+          {showPoints && (
+            <p className="result-pts-sum">{ungroupedPoints(parsed.ungrouped, jokerRank)} pts</p>
+          )}
         </div>
       )}
     </div>
@@ -204,7 +244,8 @@ function AppreciationBanner({
   );
 }
 
-export function ResultView({ userResult, bestResult, onPlayAgain }: ResultViewProps) {
+export function ResultView({ userResult, bestResult, joker, onPlayAgain }: ResultViewProps) {
+  const jokerRank = parseCard(joker).rank;
   const userParsed = parseNames(userResult.names, userResult.groupIdToTypeMap);
   const bestParsed = parseNames(bestResult.names, bestResult.groupIdToTypeMap);
   const showConfetti = userResult.isValid && userResult.score === 0;
@@ -222,23 +263,21 @@ export function ResultView({ userResult, bestResult, onPlayAgain }: ResultViewPr
       <div className="result-block">
         <div className="result-block-header">
           <span className="result-block-title">Your grouping</span>
-          <span className={`result-score ${userResult.isValid ? 'score-valid' : 'score-invalid'}`}>
-            {userResult.isValid ? '✓ Valid — ' : '✗ Score: '}
+          <span className="result-score score-valid">
             {userResult.score} pts
           </span>
         </div>
-        <GroupList parsed={userParsed} label="Your group" />
+        <GroupList parsed={userParsed} showPoints jokerRank={jokerRank} label="Your group" />
       </div>
 
       <div className="result-block">
         <div className="result-block-header">
           <span className="result-block-title">Best possible grouping</span>
-          <span className={`result-score ${bestResult.isValid ? 'score-valid' : 'score-invalid'}`}>
-            {bestResult.isValid ? '✓ Valid — ' : 'Score: '}
+          <span className="result-score score-valid">
             {bestResult.score} pts
           </span>
         </div>
-        <GroupList parsed={bestParsed} label="Group" />
+        <GroupList parsed={bestParsed} showPoints={false} jokerRank={jokerRank} label="Group" />
       </div>
 
       <div className="play-again-row">

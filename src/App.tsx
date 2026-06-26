@@ -37,18 +37,31 @@ function JokerCard({ cardStr }: { cardStr: string }) {
   const red = isRed(cardStr);
   return (
     <div className={`joker-card-display ${red ? 'red' : 'black'}`}>
-      <div className="joker-card-corner">
-        <span>{rank}</span>
-        <span>{sym}</span>
+      <div className="card-corner top-left">
+        <span className="rank">{rank}</span>
+        <span className="suit-sm">{sym}</span>
       </div>
-      <div className="joker-card-sym">{sym}</div>
+      <div className="suit-center">{sym}</div>
+      <div className="card-corner bottom-right">
+        <span className="rank">{rank}</span>
+        <span className="suit-sm">{sym}</span>
+      </div>
+      <div className="joker-badge">WILD</div>
     </div>
   );
 }
 
+type Phase = 'must-draw' | 'must-discard' | 'can-submit';
+
 function newGame() {
-  const { hand, joker } = dealHand();
-  return { hand, joker, groups: [{ id: 1, cards: hand }] as Group[], nextId: 2 };
+  const { hand, joker, remainingDeck } = dealHand();
+  return {
+    joker,
+    groups: [{ id: 1, cards: hand }] as Group[],
+    nextId: 2,
+    deckCards: remainingDeck,
+    phase: 'must-draw' as Phase,
+  };
 }
 
 export default function App() {
@@ -84,6 +97,28 @@ export default function App() {
         if (g.id === targetGroupId) return { ...g, cards: [...g.cards, cardStr] };
         return g;
       }),
+    }));
+  }
+
+  function drawCard() {
+    if (game.phase === 'must-discard' || game.deckCards.length === 0) return;
+    const [top, ...rest] = game.deckCards;
+    setGame(prev => ({
+      ...prev,
+      deckCards: rest,
+      phase: 'must-discard',
+      groups: prev.groups.map((g, i) => i === 0 ? { ...g, cards: [...g.cards, top] } : g),
+    }));
+  }
+
+  function discardCard(cardStr: string, groupId: number) {
+    if (game.phase !== 'must-discard') return;
+    setGame(prev => ({
+      ...prev,
+      phase: 'can-submit',
+      groups: prev.groups.map(g =>
+        g.id === groupId ? { ...g, cards: g.cards.filter(c => c !== cardStr) } : g
+      ),
     }));
   }
 
@@ -134,19 +169,41 @@ export default function App() {
   return (
     <div className="app">
       <div className="header">
-        <div className="joker-area">
-          <span className="joker-label">Wild joker</span>
-          <JokerCard cardStr={game.joker} />
-          <span className="joker-hint">
-            Any {parseCard(game.joker).rank} in your hand acts as a joker
-          </span>
+        <div className="header-left">
+          <div className="deck-area">
+            <span className="deck-label">Deck</span>
+            <button
+              className="deck-pile"
+              onClick={drawCard}
+              disabled={game.phase === 'must-discard' || game.deckCards.length === 0}
+              title="Draw a card"
+            >
+              <div className="deck-card-face">
+                <span className="deck-count">{game.deckCards.length}</span>
+                <span className="deck-cards-left">cards left</span>
+              </div>
+            </button>
+            <span className="deck-hint">
+              {game.phase === 'must-draw' && 'Draw to start'}
+              {game.phase === 'must-discard' && 'Discard one'}
+              {game.phase === 'can-submit' && 'Draw again?'}
+            </span>
+          </div>
+
+          <div className="joker-area">
+            <span className="joker-label">Joker</span>
+            <JokerCard cardStr={game.joker} />
+          </div>
         </div>
-        <button className="btn-submit" onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Checking…' : 'Submit grouping'}
-        </button>
       </div>
 
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        {game.phase === 'must-discard' && (
+          <div className="discard-banner">
+            You drew a card — click × on any card to discard it
+          </div>
+        )}
+
         <div className="groups-area">
           {game.groups.map((group, i) => (
             <CardGroup
@@ -155,11 +212,26 @@ export default function App() {
               index={i}
               onDelete={() => deleteGroup(group.id)}
               canDelete={game.groups.length > 1}
+              discardMode={game.phase === 'must-discard'}
+              onDiscard={(cardStr) => discardCard(cardStr, group.id)}
             />
           ))}
           <button className="btn-add-group" onClick={addGroup}>
             <span className="add-icon">＋</span>
             <span>New group</span>
+          </button>
+        </div>
+
+        <div className="submit-row">
+          <button
+            className="btn-submit"
+            onClick={handleSubmit}
+            disabled={loading || game.phase !== 'can-submit'}
+          >
+            {loading ? 'Checking…' :
+             game.phase === 'must-draw' ? 'Draw a card first →' :
+             game.phase === 'must-discard' ? 'Discard a card first' :
+             'Submit grouping →'}
           </button>
         </div>
 
@@ -186,6 +258,7 @@ export default function App() {
         <ResultView
           userResult={result.userResult}
           bestResult={result.bestResult}
+          joker={game.joker}
           onPlayAgain={playAgain}
         />
       )}
