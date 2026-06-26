@@ -1,6 +1,16 @@
 # Rummy Group
 
-A web app for practising Rummy card grouping. Draw from the deck, arrange your 13 cards into valid groups, and submit to see your score alongside the best possible grouping.
+Finding the best grouping for rummy with 13 cards is very complex. 
+The algorithm that finds the optimal card formation is in [`gp/bestGroup.ts`, line 849]
+To demonstrate the working of algorithm I developed a light weight website to group the cards and get the optimal grouping.
+
+Rules that needs to be followed-
+1. Cards have to be grouped and a group consists of atleast 3 cards.
+2. Groups are of 3 types, pure sequence, impure sequence and set. Check below what is the criteria for each.
+3. Cards that are not part of any group will incur points equal to its face value, King, Queen, Jack, Ace will incur 10 points.
+4. You have to group the cards such that the points are minimum.
+5. If the cards are such that atleast 1 pure seq and 2 sequence can't be formed then automatically the points is 80 and you can try again.
+
 
 ## How to play
 
